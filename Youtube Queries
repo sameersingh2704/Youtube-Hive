@@ -1,0 +1,17 @@
+
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: YOUTUBE :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+create table ytdata_dummy(video_id char(11), uploader varchar(100), interval smallint, category varchar(100), length smallint,views bigint, rating float, rating_count smallint, comment_count smallint, related_video_id array<char(11)>) row format delimited fields terminated by '\t' collection items terminated by ' ';
+
+load data inpath "/user/edureka_572857/youtubedata.txt" into table ytdata_dummy;
+
+create table ytdata(video_id char(11), uploader varchar(100), interval smallint, length smallint,views bigint, rating float, rating_count smallint, comment_count smallint, related_video_id array<char(11)>) partitioned by (category varchar(100)) row format delimited fields terminated by '\t' collection items terminated by ' ';
+
+insert into table ytdata partition(category) select video_id,uploader, interval, length, views, rating, rating_count, comment_count, related_video_id, category from ytdata_dummy;
+
+
+select * from (select upload_count, category, dense_rank() over (order by views_count desc) as upload_rank from (select count(*) as upload_count, category from ytdata group by category) a) b where b.upload_rank in (1,2,3,4,5);
+
+select * from (select distinct video_id, rating, dense_rank() over (order by rating desc) as rating_rank from ytdata) a where a.rating_rank in (1,2,3,4,5,6,7,8,9,10) limit 10;
+	
+select * from (select distinct video_id, views, dense_rank() over (order by views desc) as view_rank from ytdata) a where a.view_rank = 1; 
